@@ -46,9 +46,9 @@ public final class User {
       "\n\nuser.proto\022\nie.gmit.ds\"/\n\013HashRequest\022" +
       "\016\n\006userId\030\001 \001(\005\022\020\n\010password\030\002 \001(\t\"D\n\014Has" +
       "hResponse\022\016\n\006userId\030\001 \001(\005\022\026\n\016hashedPassw" +
-      "ord\030\002 \001(\t\022\014\n\004salt\030\003 \001(\005\"Q\n\027ValidatePassw" +
+      "ord\030\002 \001(\t\022\014\n\004salt\030\003 \001(\t\"Q\n\027ValidatePassw" +
       "ordRequest\022\020\n\010password\030\001 \001(\t\022\026\n\016hashedPa" +
-      "ssword\030\002 \001(\t\022\014\n\004salt\030\003 \001(\005\"2\n\030ValidatePa" +
+      "ssword\030\002 \001(\t\022\014\n\004salt\030\003 \001(\t\"2\n\030ValidatePa" +
       "sswordResponse\022\026\n\016passwordsMatch\030\001 \001(\0102\247" +
       "\001\n\017PasswordService\022;\n\004hash\022\027.ie.gmit.ds." +
       "HashRequest\032\030.ie.gmit.ds.HashResponse\"\000\022" +

@@ -24,7 +24,7 @@ message HashResponse {
 	
 	string hashedPassword = 2;
 	
-	int32 salt = 3;
+	string salt = 3;
 }
 
 message ValidatePasswordRequest {
@@ -32,7 +32,7 @@ message ValidatePasswordRequest {
 	
 	string hashedPassword = 2;
 	
-	int32 salt = 3;
+	string salt = 3;
 }
 
 message ValidatePasswordResponse {

@@ -23,7 +23,12 @@ public interface HashResponseOrBuilder extends
       getHashedPasswordBytes();
 
   /**
-   * <code>int32 salt = 3;</code>
+   * <code>string salt = 3;</code>
    */
-  int getSalt();
+  java.lang.String getSalt();
+  /**
+   * <code>string salt = 3;</code>
+   */
+  com.google.protobuf.ByteString
+      getSaltBytes();
 }

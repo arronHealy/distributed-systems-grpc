@@ -5,6 +5,8 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Base64;
 import java.util.logging.Logger;
 
 public class HashServer {
@@ -53,9 +55,34 @@ public class HashServer {
 
     static class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase {
     	
+    	private PasswordManager passwordManager = PasswordManager.getInstance();
+    	
+    	private String hashedPassword;
+    	
+    	private byte[] salt;
+    	
+    	private boolean passwordsMatch;
+    	
     	@Override
     	public void hash(HashRequest req, StreamObserver<HashResponse> responseObserver) {
-    		HashResponse reply = HashResponse.newBuilder().setHashedPassword(req.getPassword()).setUserId(req.getUserId()).build();
+    		
+    		salt = passwordManager.generateSalt();
+    		
+    		String[] hashes = passwordManager.hashPassword(req.getPassword(), salt);
+    		
+    		HashResponse reply = HashResponse.newBuilder().setHashedPassword(hashes[0]).setSalt(hashes[1]).setUserId(req.getUserId()).build();
+    		responseObserver.onNext(reply);
+    		responseObserver.onCompleted();
+    	}
+    	
+    	@Override
+    	public void validate(ValidatePasswordRequest req, StreamObserver<ValidatePasswordResponse> responseObserver) {
+    		
+    		//byte[] hash = Base64.getDecoder().decode(req.getHashedPassword());
+    		
+    		passwordsMatch = passwordManager.passwordMatch(req.getPassword(), req.getSalt(), req.getHashedPassword());
+    		
+    		ValidatePasswordResponse reply = ValidatePasswordResponse.newBuilder().setPasswordsMatch(passwordsMatch).build();
     		responseObserver.onNext(reply);
     		responseObserver.onCompleted();
     	}
