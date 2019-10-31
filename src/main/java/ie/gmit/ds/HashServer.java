@@ -21,7 +21,7 @@ public class HashServer {
     		
     		if(NumberUtils.isNumber(args[0])) {
     			
-    			if(Integer.parseInt(args[0]) > 2000) {
+    			if(Integer.parseInt(args[0]) > 2000 && Integer.parseInt(args[0]) <= 65535) {
     				port = Integer.parseInt(args[0]);
     			}	
     		}
