@@ -40,6 +40,7 @@ public class PasswordManager {
 	}
 	
 	public String[] hashPassword(String password, byte[] salt) {
+		
 		PBEKeySpec spec = new PBEKeySpec(password.trim().toCharArray(), salt, ITERATIONS, KEY_LENGTH);
 		
 		try {

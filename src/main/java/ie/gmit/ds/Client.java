@@ -9,6 +9,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import ie.gmit.ds.HashRequest;
+import ie.gmit.ds.HashResponse;
+import ie.gmit.ds.PasswordServiceGrpc;
+import ie.gmit.ds.ValidatePasswordRequest;
+import ie.gmit.ds.ValidatePasswordResponse;
+
 public class Client {
 
 	private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -17,9 +23,6 @@ public class Client {
 	
 	private static Scanner console;
 
-	/**
-	 * Construct client for accessing HelloWorld server using the existing channel.
-	 */
 	public Client(String host, int port) {
 		this.channel = ManagedChannelBuilder.forAddress(host, port)
 				// Channels are secure by default (via SSL/TLS). For the example we disable TLS
@@ -32,17 +35,6 @@ public class Client {
 	public void shutdown() throws InterruptedException {
 		channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
 	}
-
-	/** Say hello to server. */
-	/*
-	 * public void greet(String name) { logger.info("Will try to greet " + name +
-	 * " ..."); HelloRequest request =
-	 * HelloRequest.newBuilder().setName(name).build(); HelloReply response; try {
-	 * response = greeterClientStub.sayHello(request); } catch
-	 * (StatusRuntimeException e) { logger.log(Level.WARNING, "RPC failed: {0}",
-	 * e.getStatus()); return; } logger.info("Greeting: " + response.getMessage());
-	 * }
-	 */
 
 	public void hash(int id, String password) {
 
