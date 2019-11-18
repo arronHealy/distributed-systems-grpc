@@ -1,0 +1,40 @@
+syntax="proto3";
+
+package ie.gmit.ds;
+
+option java_package="ie.gmit.ds";
+option java_multiple_files = true;
+
+
+service PasswordService {
+
+	rpc hash (HashRequest) returns (HashResponse) {}
+	
+	rpc validate (ValidatePasswordRequest) returns (ValidatePasswordResponse) {}
+}
+
+message HashRequest {
+	int32 userId = 1;
+	
+	string password = 2;
+}
+
+message HashResponse {
+	int32 userId = 1;
+	
+	string hashedPassword = 2;
+	
+	string salt = 3;
+}
+
+message ValidatePasswordRequest {
+	string password = 1;
+	
+	string hashedPassword = 2;
+	
+	string salt = 3;
+}
+
+message ValidatePasswordResponse {
+	bool passwordsMatch = 1;
+}
