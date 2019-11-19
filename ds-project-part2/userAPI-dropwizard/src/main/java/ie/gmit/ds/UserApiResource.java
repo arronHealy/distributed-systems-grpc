@@ -24,8 +24,8 @@ import javax.validation.Validator;
 
 
 @Path("/user")
-@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
+@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
 public class UserApiResource {
 
 	private final Logger logger = Logger.getLogger(UserApiResource.class.getName());
@@ -75,6 +75,7 @@ public class UserApiResource {
     	boolean created = grpcClient.hash(userRequest.getUserId(), userRequest.getUserPassword());
     	
     	String entity = "User created: " + created;
+    	
     	
     	return Response.status(Status.CREATED).type(MediaType.TEXT_PLAIN).entity(entity).build();
     }

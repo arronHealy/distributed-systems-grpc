@@ -2,32 +2,36 @@ package ie.gmit.ds;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
+//import javax.xml.bind.annotation.XmlAccessType;
+//import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.NotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+//import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+//import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+//import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 
+
+//@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name="UserModel")
+//@JacksonXmlRootElement(localName="UserModel")
 public class UserModel {
 
 	@NotNull
     private int userId;
     
-	@NotEmpty
+	@NotNull
     private String userPassword;
     
-	@NotEmpty
+	@NotNull
 	@Pattern(regexp=".+@.+\\.[a-z]+")
     private String email;
     
-	@NotEmpty
+	@NotNull
 	@Length(min=4, max=25)
     private String username;
 	
@@ -56,9 +60,59 @@ public class UserModel {
     	this.salt = salt;
     }
     
+    
+    // Setters needed for xml mapping
     public void setHashedPassword(String password) {
     	this.hashedPassword = password;
     	this.userPassword = "";
+    }
+    
+    public void setUserId(int id) {
+    	this.userId = id;
+    }
+    
+    public void setUserPassword(String password) {
+    	this.userPassword = password;
+    }
+    
+    public void setEmail(String email) {
+    	this.email = email;
+    }
+    
+    public void setUsername(String name) {
+    	this.username = name;
+    }
+    
+
+    @JsonProperty
+    @XmlElement(name="userId")
+    //@JacksonXmlProperty(localName="userId", isAttribute=false)
+    public int getUserId(){
+        return userId;
+    }
+    
+    @JsonProperty
+    @XmlElement(name="userPassword")
+    //@JacksonXmlProperty(localName="userPassword", isAttribute=false)
+    //@JacksonXmlText
+    public String getUserPassword() {
+    	return userPassword;
+    }
+    
+    @JsonProperty
+    @XmlElement(name="email")
+    //@JacksonXmlProperty(localName="email", isAttribute=false)
+    //@JacksonXmlText
+    public String getEmail() {
+    	return email;
+    }
+    
+    @JsonProperty
+    @XmlElement(name="username")
+    //@JacksonXmlProperty(localName="username", isAttribute=false)
+    //@JacksonXmlText
+    public String getUsername() {
+    	return username;
     }
     
     @JsonProperty
@@ -69,30 +123,6 @@ public class UserModel {
     @JsonProperty
     public String getHashedPassword() {
     	return hashedPassword;
-    }
-
-    @JsonProperty
-    @XmlElement(name="userId")
-    public int getUserId(){
-        return userId;
-    }
-    
-    @JsonIgnoreProperties
-    @XmlElement(name="userPassword")
-    public String getUserPassword() {
-    	return userPassword;
-    }
-    
-    @JsonProperty
-    @XmlElement(name="email")
-    public String getEmail() {
-    	return email;
-    }
-    
-    @JsonProperty
-    @XmlElement(name="username")
-    public String getUsername() {
-    	return username;
     }
    
 }
