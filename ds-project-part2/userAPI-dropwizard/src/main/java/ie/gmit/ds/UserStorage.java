@@ -39,24 +39,7 @@ public class UserStorage {
 		return database.values();
 	}
 	
-	/*
-	public boolean editUser(int id, UserModel user) {
-		
-		if(id <= 0 || user == null) {
-			return false;
-		}
-		
-		if(database.get(new Integer(id)) == null) {
-			return false;
-		}
-		
-		UserModel updateUser = database.get(new Integer(id));
-		
-		
-		
-		return true;
-	}
-	*/
+	
 	public UserModel getUserById(int id) {
 		
 		return database.get(new Integer(id));

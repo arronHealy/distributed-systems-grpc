@@ -1,7 +1,6 @@
 package ie.gmit.ds;
 
-import com.google.protobuf.BoolValue;
-import com.google.protobuf.ByteString;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -10,8 +9,6 @@ import io.grpc.stub.StreamObserver;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.validation.constraints.NotNull;
 
 import ie.gmit.ds.HashRequest;
 import ie.gmit.ds.HashResponse;
@@ -28,7 +25,6 @@ public class PasswordClient {
 
 	private UserStorage storage = UserStorage.getInstance();
 
-	private UserModel userSession;
 
 	public PasswordClient(String host, int port) {
 		// TODO Auto-generated constructor stub
@@ -43,7 +39,11 @@ public class PasswordClient {
 		channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
 	}
 
-	public boolean hash(@NotNull int id, @NotNull String password) {
+	public boolean hash(int id, String password) {
+		
+		if(id <= 0 || password.length() <= 0 || password == null) {
+			return false;
+		}
 
 		StreamObserver<HashResponse> responseObserver = new StreamObserver<HashResponse>() {
 
@@ -52,9 +52,6 @@ public class PasswordClient {
 				// TODO Auto-generated method stub
 				String hashedPassword = response.getHashedPassword();
 				String salt = response.getSalt();
-
-				System.out.println("hashed password: " + hashedPassword + " \nsalt: " + salt);
-				// error from here down
 
 				boolean updated = storage.updateUserCredentials(response.getUserId(), hashedPassword, salt);
 
@@ -93,7 +90,7 @@ public class PasswordClient {
 		return true;
 	}
 
-	public boolean validate(@NotNull String password, @NotNull String salt, @NotNull String hashedPassword) {
+	public boolean validate(String password, String salt, String hashedPassword) {
 		
 		boolean matches = false;
 

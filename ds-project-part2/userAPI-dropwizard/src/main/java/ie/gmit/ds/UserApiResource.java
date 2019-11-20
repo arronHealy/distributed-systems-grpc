@@ -1,10 +1,7 @@
 package ie.gmit.ds;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Set;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -16,130 +13,163 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import io.grpc.Context.Storage;
-
 import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
 import javax.validation.Validator;
-
-
+import javax.validation.ValidatorFactory;
 
 @Path("/user")
-@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
-@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
+@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML })
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML })
 public class UserApiResource {
 
-	private final Logger logger = Logger.getLogger(UserApiResource.class.getName());
-	
-    private PasswordClient grpcClient;
-    
-    private UserModel userSession;
-    
-    private Validator validatior;
-    
-    private UserStorage storage = UserStorage.getInstance();
+	private ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 
-    public UserApiResource(String host, int port){
-    	
-        grpcClient = new PasswordClient(host, port);
+	private PasswordClient grpcClient;
 
-    }
-    
-    @GET
-    public Collection<UserModel> getUsers(){
-    	return storage.getAllUsers();
-    }
-    
-    @GET
-    @Path("{id}")
-    public UserModel getUserById(@PathParam("id") int id) {
-    	return storage.getUserById(id);
-    }
-    
-    @POST
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response createUser(UserModel userRequest) {
-    	
-    	System.out.println("User values: " + userRequest.getUserId() + ", " + userRequest.getUserPassword());
-    	
-    	if(userRequest.getUserId() <= 0 || userRequest.getEmail() == null || userRequest.getUsername() == null || userRequest.getUserPassword() == null) {
-    		return Response.status(Status.BAD_REQUEST).entity("Invalid User Data!").build();
-    	} 
-    	
-    	
-    	if(storage.containsUserId(userRequest.getUserId())) {
-    		return Response.status(Status.BAD_REQUEST).entity("User with this ID already Exists!").build();
-    	}
-    	
-    	storage.addUser(userRequest);
-    	
-    	boolean created = grpcClient.hash(userRequest.getUserId(), userRequest.getUserPassword());
-    	
-    	String entity = "User created: " + created;
-    	
-    	
-    	return Response.status(Status.CREATED).type(MediaType.TEXT_PLAIN).entity(entity).build();
-    }
-    
-    @POST
-    @Path("update")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response updateUser(UserModel userRequest) {
-    	
-    	if(userRequest.getUserId() <= 0 || userRequest.getEmail() == null || userRequest.getUsername() == null || userRequest.getUserPassword() == null) {
-    		return Response.status(Status.BAD_REQUEST).entity("Invalid User Data!").build();
-    	} 
-    	
-    	
-    	if(!storage.containsUserId(userRequest.getUserId())) {
-    		return Response.status(Status.BAD_REQUEST).entity("No User with this ID Exists! Could not update...").build();
-    	}
-    	
-    	storage.addUser(userRequest);
-    	
-    	boolean updated = grpcClient.hash(userRequest.getUserId(), userRequest.getUserPassword());
-    	
-    	String entity = "User updated: " + updated;
-    	
-    	return Response.status(Status.CREATED).type(MediaType.TEXT_PLAIN).entity(entity).build();
-    	
-    }
-    
-    @POST
-    @Path("delete")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response deleteUser(UserModel userRequest) {
-    	
-    	if(!storage.containsUserId(userRequest.getUserId())) {
-    		return Response.status(Status.BAD_REQUEST).entity("No User with this ID Exists! Could not delete...").build();
-    	}
-    	
-    	return storage.deleteUser(userRequest.getUserId()) ? Response.status(Status.ACCEPTED).entity("User Deleted Successfully!").build() : Response.status(Status.BAD_REQUEST).entity("Error occurred! Could not Delete user...").build();
-    }
-    
-    @POST
-    @Path("login")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response loginUser(UserModel userRequest) {
-    
-    	if(userRequest.getUserId() <= 0 || userRequest.getEmail() == null || userRequest.getUsername() == null || userRequest.getUserPassword() == null) {
-    		return Response.status(Status.BAD_REQUEST).entity("Invalid User Data!").build();
-    	} 
-    	
-    	if(!storage.containsUserId(userRequest.getUserId())) {
-    		return Response.status(Status.BAD_REQUEST).entity("No User with this ID Exists! Could not delete...").build();
-    	}
-    	
-    	UserModel loginUser = storage.getUserById(userRequest.getUserId());
-    	
-    	if(loginUser == null) {
-    		return Response.status(Status.INTERNAL_SERVER_ERROR).entity("An error has occured! Could not load user. Please Try Again...").build();
-    	}
-    	
-    	boolean userLoggedIn = grpcClient.validate(userRequest.getUserPassword(), loginUser.getSalt(), loginUser.getHashedPassword());
-    	
-    	
-    	return userLoggedIn ? Response.status(Status.ACCEPTED).entity("Log in Accepted! Welcome back " + loginUser.getUsername()).build() : Response.status(Status.BAD_REQUEST).entity("Login Failed! Not Valid Credentials...").build();
-    }
-    
+	private Validator validatior = factory.getValidator();
+
+	private Set<ConstraintViolation<UserModel>> violations;
+
+	private UserStorage storage = UserStorage.getInstance();
+
+	public UserApiResource(String host, int port) {
+
+		grpcClient = new PasswordClient(host, port);
+	}
+
+	@GET
+	public Response getUsers() {
+		Collection<UserModel> users = storage.getAllUsers();
+		
+		return users != null ? Response.status(Status.OK).entity(users).build() : Response.status(Status.NOT_FOUND).entity("Could not retrieve Users! Please try again...").build();
+	}
+
+	@GET
+	@Path("{id}")
+	public Response getUserById(@PathParam("id") int id) {
+		
+		if(!storage.containsUserId(id)) {
+			return Response.status(Status.NOT_FOUND).entity("No User with this ID Exists! Could not update...")
+					.build();
+		}
+		
+		UserModel user = storage.getUserById(id);
+		
+		return user != null ? Response.status(Status.OK).entity(user).build() : Response.status(Status.NOT_FOUND).entity("No User with this ID found!").build();
+	}
+
+	@POST
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public Response createUser(UserModel userRequest) {
+
+		violations = validatior.validate(userRequest);
+
+		if (violations.size() > 0) {
+			return Response.status(Status.BAD_REQUEST)
+					.entity("Invalid User Data! Violations present..." + violations.toString()).build();
+		}
+
+		if (storage.containsUserId(userRequest.getUserId())) {
+			return Response.status(Status.BAD_REQUEST).entity("User with this ID already Exists!").build();
+		}
+
+		storage.addUser(userRequest);
+
+		boolean created = grpcClient.hash(userRequest.getUserId(), userRequest.getUserPassword());
+		
+		if(!created) {
+			storage.deleteUser(userRequest.getUserId());
+		}
+
+		return created
+				? Response.status(Status.CREATED).type(MediaType.TEXT_PLAIN)
+						.entity("User Details Successfully Added! You can now login...").build()
+				: Response.status(Status.INTERNAL_SERVER_ERROR).type(MediaType.TEXT_PLAIN)
+						.entity("Error Adding User Details! Please Try again...").build();
+	}
+
+	@POST
+	@Path("update")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public Response updateUser(UserModel userRequest) {
+
+		violations = validatior.validate(userRequest);
+
+		if (violations.size() > 0) {
+			return Response.status(Status.BAD_REQUEST)
+					.entity("Invalid User Data! Violations present..." + violations.toString()).build();
+		}
+
+		if (!storage.containsUserId(userRequest.getUserId())) {
+			return Response.status(Status.NOT_FOUND).entity("No User with this ID Exists! Could not update...")
+					.build();
+		}
+
+		storage.addUser(userRequest);
+
+		boolean updated = grpcClient.hash(userRequest.getUserId(), userRequest.getUserPassword());
+
+		return updated
+				? Response.status(Status.CREATED).type(MediaType.TEXT_PLAIN)
+						.entity("User Details Successfully updated!").build()
+				: Response.status(Status.INTERNAL_SERVER_ERROR).type(MediaType.TEXT_PLAIN)
+						.entity("Error Updating User Details! Please Try again...").build();
+	}
+
+	@POST
+	@Path("delete")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public Response deleteUser(UserModel userRequest) {
+
+		violations = validatior.validate(userRequest);
+
+		if (violations.size() > 0) {
+			return Response.status(Status.BAD_REQUEST)
+					.entity("Invalid User Data! Violations present..." + violations.toString()).build();
+		}
+
+		if (!storage.containsUserId(userRequest.getUserId())) {
+			return Response.status(Status.NOT_FOUND).entity("No User with this ID Exists! Could not delete...")
+					.build();
+		}
+
+		return storage.deleteUser(userRequest.getUserId())
+				? Response.status(Status.ACCEPTED).entity("User Deleted Successfully!").build()
+				: Response.status(Status.BAD_REQUEST).entity("Error occurred! Could not Delete user...").build();
+	}
+
+	@POST
+	@Path("login")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public Response loginUser(UserModel userRequest) {
+
+		violations = validatior.validate(userRequest);
+
+		if (violations.size() > 0) {
+			return Response.status(Status.BAD_REQUEST)
+					.entity("Invalid User Data! Violations present..." + violations.toString()).build();
+		}
+
+		if (!storage.containsUserId(userRequest.getUserId())) {
+			return Response.status(Status.NOT_FOUND).entity("No User with this ID Exists! Could not delete...")
+					.build();
+		}
+
+		UserModel loginUser = storage.getUserById(userRequest.getUserId());
+
+		if (loginUser == null) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR)
+					.entity("An error has occured! Could not load user. Please Try Again...").build();
+		}
+
+		boolean userLoggedIn = grpcClient.validate(userRequest.getUserPassword(), loginUser.getSalt(),
+				loginUser.getHashedPassword());
+
+		return userLoggedIn
+				? Response.status(Status.ACCEPTED).entity("Log in Accepted! Welcome back " + loginUser.getUsername())
+						.build()
+				: Response.status(Status.BAD_REQUEST).entity("Login Failed! Not Valid Credentials...").build();
+	}
 
 }
